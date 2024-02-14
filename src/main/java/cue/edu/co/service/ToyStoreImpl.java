@@ -1,4 +1,8 @@
-package cue.edu.co.view;
+package cue.edu.co.service;
+
+import cue.edu.co.mapping.dtos.ToyDto;
+import cue.edu.co.mapping.mappers.ToyMapper;
+import cue.edu.co.model.Toy;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -6,23 +10,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ToyStore implements Serializable {
+public class ToyStoreImpl implements ToyStore {
     @Serial
     private static final long serialVersionUID = 1L;
     private List<Toy> inventory;
     private static final String DATA_FILE = "data.dat";
 
-    public ToyStore() {
+    public ToyStoreImpl() {
         this.inventory = new ArrayList<>();
     }
 
-    public void addToy(Toy toy) {
-        inventory.add(toy);
+    public void addToy(ToyDto toy) {
+        inventory.add(ToyMapper.mapFromModel(toy));
         saveData();
     }
 
-    public List<Toy> getInventory() {
-        return inventory;
+    public List<ToyDto> getInventory() {
+        return inventory.stream().map(ToyMapper::mapFromModel).toList();
     }
 
     private void saveData() {
@@ -34,8 +38,8 @@ public class ToyStore implements Serializable {
         }
     }
 
-    public static ToyStore loadStore() {
-        ToyStore store = new ToyStore();
+    public static ToyStoreImpl loadStore() {
+        ToyStoreImpl store = new ToyStoreImpl();
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(DATA_FILE))) {
             Object obj = ois.readObject();
             if (obj instanceof List) {

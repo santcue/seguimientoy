@@ -1,4 +1,4 @@
-package cue.edu.co.view;
+package cue.edu.co.model;
 
 import java.io.Serializable;
 

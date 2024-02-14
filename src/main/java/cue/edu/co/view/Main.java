@@ -1,5 +1,9 @@
 package cue.edu.co.view;
 
+import cue.edu.co.mapping.dtos.ToyDto;
+import cue.edu.co.model.Toy;
+import cue.edu.co.service.ToyStoreImpl;
+
 import javax.swing.*;
 import java.util.Collections;
 import java.util.List;
@@ -7,8 +11,7 @@ import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
-        ToyStore toyStore = ToyStore.loadStore();
-
+        ToyStoreImpl toyStore = new ToyStoreImpl();
         boolean continueExecution = true;
         while (continueExecution) {
             String option = JOptionPane.showInputDialog(
@@ -28,34 +31,82 @@ public class Main {
 
             switch (option) {
                 case "1":
-                    addToy(toyStore);
+                    String name = JOptionPane.showInputDialog("Enter the name of the toy:");
+                    char type = JOptionPane.showInputDialog("Enter the type of the toy (O, 1, 2):").charAt(0);
+                    double price = Double.parseDouble(JOptionPane.showInputDialog("Enter the price of the toy:"));
+                    int quantity = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity of the toy:"));
+
+                    toyStore.addToy(new ToyDto(name, type, price, quantity));
                     break;
                 case "2":
-                    showQuantityByType(toyStore);
+                    Map<Character, Integer> quantityByType = toyStore.countToysByType();
+                    StringBuilder message = new StringBuilder("Quantity of toys by type:\n");
+                    for (Map.Entry<Character, Integer> entry : quantityByType.entrySet()) {
+                        message.append("Type ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+                    }
+                    JOptionPane.showMessageDialog(null, message.toString());
                     break;
                 case "3":
-                    showTotalQuantity(toyStore);
+                    int totalQuantity = toyStore.getTotalQuantity();
+                    JOptionPane.showMessageDialog(null, "Total quantity of toys: " + totalQuantity);
                     break;
                 case "4":
-                    showTotalValue(toyStore);
+                    double totalValue = toyStore.getTotalValue();
+                    JOptionPane.showMessageDialog(null, "Total value of toys: $" + totalValue);
                     break;
                 case "5":
-                    decreaseStock(toyStore);
+                    String toyName = JOptionPane.showInputDialog("Enter the name of the toy to decrease stock:");
+                    Toy toy = findToy(toyStore, toyName);
+                    if (toy != null) {
+                        int quantityDecrease = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity to decrease:"));
+                        toyStore.decreaseStock(toy, quantityDecrease);
+                        JOptionPane.showMessageDialog(null, "Stock decreased successfully.");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "The toy is not found in the store.");
+                    }
                     break;
                 case "6":
-                    increaseStock(toyStore);
+                    String toyNameIncrease = JOptionPane.showInputDialog("Enter the name of the toy to increase stock:");
+                    Toy toyIncrease = findToy(toyStore, toyNameIncrease);
+                    if (toyIncrease != null) {
+                        int quantityIncrease = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity to increase:"));
+                        toyStore.increaseStock(toyIncrease, quantityIncrease);
+                        JOptionPane.showMessageDialog(null, "Stock increased successfully.");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "The toy is not found in the store.");
+                    }
                     break;
                 case "7":
-                    showTypeWithMostToys(toyStore);
+                    char typeWithMostToys = toyStore.getTypeWithMostToys();
+                    JOptionPane.showMessageDialog(null, "Type with most toys: " + typeWithMostToys);
                     break;
                 case "8":
-                    showTypeWithLeastToys(toyStore);
+                    char typeWithLeastToys = toyStore.getTypeWithLeastToys();
+                    JOptionPane.showMessageDialog(null, "Type with least toys: " + typeWithLeastToys);
                     break;
                 case "9":
-                    getToysWithValueGreaterThan(toyStore);
+                    double value = Double.parseDouble(JOptionPane.showInputDialog("Enter the minimum value:"));
+                    List<Toy> toysWithValueGreaterThan = toyStore.getToysWithValueGreaterThan(value);
+                    StringBuilder messageMinimum = new StringBuilder("Toys with value greater than $" + value + ":\n");
+                    for (Toy toyMinimum : toysWithValueGreaterThan) {
+                        messageMinimum.append(toyMinimum.toString()).append("\n");
+                    }
+                    JOptionPane.showMessageDialog(null, messageMinimum.toString());
                     break;
                 case "10":
-                    sortStockByType(toyStore);
+                    List<Toy> sortedInventory = toyStore.getInventory();
+                    Collections.sort(sortedInventory, (t1, t2) -> {
+                        if (t1.getType() != t2.getType()) {
+                            return t1.getType() - t2.getType();
+                        }
+                        return t1.getQuantity() - t2.getQuantity();
+                    });
+
+                    StringBuilder messageSorted = new StringBuilder("Inventory sorted by type and quantity:\n");
+                    for (Toy toySorted : sortedInventory) {
+                        messageSorted.append(toySorted.toString()).append("\n");
+                    }
+                    JOptionPane.showMessageDialog(null, messageSorted.toString());
                     break;
                 case "11":
                     continueExecution = false;
@@ -65,59 +116,6 @@ public class Main {
             }
         }
     }
-
-    private static void addToy(ToyStore toyStore) {
-        String name = JOptionPane.showInputDialog("Enter the name of the toy:");
-        char type = JOptionPane.showInputDialog("Enter the type of the toy (O, 1, 2):").charAt(0);
-        double price = Double.parseDouble(JOptionPane.showInputDialog("Enter the price of the toy:"));
-        int quantity = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity of the toy:"));
-        Toy toy = new Toy(name, type, price, quantity);
-        toyStore.addToy(toy);
-    }
-
-    private static void showQuantityByType(ToyStore toyStore) {
-        Map<Character, Integer> quantityByType = toyStore.countToysByType();
-        StringBuilder message = new StringBuilder("Quantity of toys by type:\n");
-        for (Map.Entry<Character, Integer> entry : quantityByType.entrySet()) {
-            message.append("Type ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
-        }
-        JOptionPane.showMessageDialog(null, message.toString());
-    }
-
-    private static void showTotalQuantity(ToyStore toyStore) {
-        int totalQuantity = toyStore.getTotalQuantity();
-        JOptionPane.showMessageDialog(null, "Total quantity of toys: " + totalQuantity);
-    }
-
-    private static void showTotalValue(ToyStore toyStore) {
-        double totalValue = toyStore.getTotalValue();
-        JOptionPane.showMessageDialog(null, "Total value of toys: $" + totalValue);
-    }
-
-    private static void decreaseStock(ToyStore toyStore) {
-        String toyName = JOptionPane.showInputDialog("Enter the name of the toy to decrease stock:");
-        Toy toy = findToy(toyStore, toyName);
-        if (toy != null) {
-            int quantity = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity to decrease:"));
-            toyStore.decreaseStock(toy, quantity);
-            JOptionPane.showMessageDialog(null, "Stock decreased successfully.");
-        } else {
-            JOptionPane.showMessageDialog(null, "The toy is not found in the store.");
-        }
-    }
-
-    private static void increaseStock(ToyStore toyStore) {
-        String toyName = JOptionPane.showInputDialog("Enter the name of the toy to increase stock:");
-        Toy toy = findToy(toyStore, toyName);
-        if (toy != null) {
-            int quantity = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity to increase:"));
-            toyStore.increaseStock(toy, quantity);
-            JOptionPane.showMessageDialog(null, "Stock increased successfully.");
-        } else {
-            JOptionPane.showMessageDialog(null, "The toy is not found in the store.");
-        }
-    }
-
     private static Toy findToy(ToyStore toyStore, String name) {
         for (Toy toy : toyStore.getInventory()) {
             if (toy.getName().equalsIgnoreCase(name)) {
@@ -127,39 +125,4 @@ public class Main {
         return null;
     }
 
-    private static void showTypeWithMostToys(ToyStore toyStore) {
-        char typeWithMostToys = toyStore.getTypeWithMostToys();
-        JOptionPane.showMessageDialog(null, "Type with most toys: " + typeWithMostToys);
-    }
-
-    private static void showTypeWithLeastToys(ToyStore toyStore) {
-        char typeWithLeastToys = toyStore.getTypeWithLeastToys();
-        JOptionPane.showMessageDialog(null, "Type with least toys: " + typeWithLeastToys);
-    }
-
-    private static void getToysWithValueGreaterThan(ToyStore toyStore) {
-        double value = Double.parseDouble(JOptionPane.showInputDialog("Enter the minimum value:"));
-        List<Toy> toysWithValueGreaterThan = toyStore.getToysWithValueGreaterThan(value);
-        StringBuilder message = new StringBuilder("Toys with value greater than $" + value + ":\n");
-        for (Toy toy : toysWithValueGreaterThan) {
-            message.append(toy.toString()).append("\n");
-        }
-        JOptionPane.showMessageDialog(null, message.toString());
-    }
-
-    private static void sortStockByType(ToyStore toyStore) {
-        List<Toy> sortedInventory = toyStore.getInventory();
-        Collections.sort(sortedInventory, (t1, t2) -> {
-            if (t1.getType() != t2.getType()) {
-                return t1.getType() - t2.getType();
-            }
-            return t1.getQuantity() - t2.getQuantity();
-        });
-
-        StringBuilder message = new StringBuilder("Inventory sorted by type and quantity:\n");
-        for (Toy toy : sortedInventory) {
-            message.append(toy.toString()).append("\n");
-        }
-        JOptionPane.showMessageDialog(null, message.toString());
-    }
 }
