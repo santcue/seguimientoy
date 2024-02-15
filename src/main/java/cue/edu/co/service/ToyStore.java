@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface ToyStore {
-    void addToy(ToyDto toy);
+    List<Toy> addToy(ToyDto toy);
     List<Toy> getInventory();
     Map<Character, Integer> countToysByType();
     int getTotalQuantity();

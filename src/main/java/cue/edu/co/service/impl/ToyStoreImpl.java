@@ -21,9 +21,10 @@ public class ToyStoreImpl implements ToyStore {
         this.inventory = new ArrayList<>();
     }
 
-    public void addToy(ToyDto toy) {
+    public List<Toy> addToy(ToyDto toy) {
         inventory.add(ToyMapper.mapFromModel(toy));
         saveData();
+        return inventory;
     }
 
     public List<Toy> getInventory() {
@@ -85,7 +86,7 @@ public class ToyStoreImpl implements ToyStore {
         if (quantity <= currentQuantity) {
             toy.setQuantity(currentQuantity - quantity);
         } else {
-            System.out.println("Not enough stock to decrease.");
+            throw new IllegalArgumentException("Not enough stock to decrease.");
         }
     }
 

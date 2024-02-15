@@ -1,6 +1,7 @@
 package cue.edu.co.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Toy implements Serializable {
     private String name;
@@ -50,5 +51,18 @@ public class Toy implements Serializable {
     @Override
     public String toString() {
         return "Name: " + name + ", Type: " + type + ", Price: $" + price + ", Quantity: " + quantity;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Toy toy = (Toy) o;
+        return Objects.equals(name, toy.name) && type == toy.type && Double.compare(toy.price, price) == 0 && quantity == toy.quantity;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, type, price, quantity);
     }
 }
