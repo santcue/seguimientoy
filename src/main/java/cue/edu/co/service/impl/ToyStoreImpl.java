@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ToyStoreImpl implements ToyStore {
-    @Serial
-    private static final long serialVersionUID = 1L;
     private List<Toy> inventory;
     private static final String DATA_FILE = "data.dat";
 
@@ -31,7 +29,7 @@ public class ToyStoreImpl implements ToyStore {
         return inventory;
     }
 
-    private void saveData() {
+    public void saveData() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
             oos.writeObject(inventory);
             System.out.println("Data saved successfully in " + DATA_FILE);
