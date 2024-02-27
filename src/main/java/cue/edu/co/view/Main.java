@@ -20,7 +20,7 @@ public class Main {
         DataLoadingThread loadingThread = new DataLoadingThread(toyStore);
         loadingThread.start();
 
-        DataSavingThread savingThread = new DataSavingThread(loadingThread, 3, 1000); // Por ejemplo, 3 intentos con intervalo de 1000 milisegundos
+        DataSavingThread savingThread = new DataSavingThread(loadingThread, 3, 1000);
         savingThread.start();
 
         while (continueExecution) {
