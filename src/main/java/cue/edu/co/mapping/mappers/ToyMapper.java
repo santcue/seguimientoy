@@ -10,6 +10,6 @@ public class ToyMapper {
     }
 
     public static Toy mapFromModel(ToyDto toy){
-        return new Toy(toy.name(), toy.type(), 0, 0);
+        return new Toy(toy.name(), toy.type(), toy.price(), toy.quantity());
     }
 }
