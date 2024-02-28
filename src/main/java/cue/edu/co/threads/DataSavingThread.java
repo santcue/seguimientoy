@@ -1,6 +1,8 @@
 package cue.edu.co.threads;
 
-public class DataSavingThread extends Thread {
+import java.util.concurrent.Callable;
+
+public class DataSavingThread implements Callable<Void> {
     private final Runnable runnable;
     private final int maxRetries;
     private final long retryInterval;
@@ -12,7 +14,7 @@ public class DataSavingThread extends Thread {
     }
 
     @Override
-    public void run() {
+    public Void call() throws Exception {
         int retries = 0;
         boolean saved = false;
 
@@ -25,11 +27,7 @@ public class DataSavingThread extends Thread {
                 retries++;
                 if (retries < maxRetries) {
                     System.out.println("Retrying in " + retryInterval + " milliseconds...");
-                    try {
-                        Thread.sleep(retryInterval);
-                    } catch (InterruptedException ex) {
-                        System.err.println("Thread interrupted while sleeping: " + ex.getMessage());
-                    }
+                    Thread.sleep(retryInterval);
                 }
             }
         }
@@ -37,5 +35,7 @@ public class DataSavingThread extends Thread {
         if (!saved) {
             System.err.println("Failed to save data after " + maxRetries + " retries.");
         }
+
+        return null;
     }
 }

@@ -2,15 +2,17 @@ package cue.edu.co.threads;
 
 import cue.edu.co.service.impl.ToyStoreImpl;
 
-public class DataLoadingThread extends Thread {
+import java.util.concurrent.Callable;
+
+public class DataLoadingThread implements Callable<Void> {
     private final ToyStoreImpl toyStore;
 
-    public DataLoadingThread(ToyStoreImpl toyStore) {
+    public DataLoadingThread (ToyStoreImpl toyStore) {
         this.toyStore = toyStore;
     }
 
     @Override
-    public void run() {
+    public Void call() throws Exception {
         try {
             System.out.println("Starting data loading...");
             Thread.sleep(2000);
@@ -21,5 +23,6 @@ public class DataLoadingThread extends Thread {
         } catch (Exception e) {
             System.err.println("Error loading data: " + e.getMessage());
         }
+        return null;
     }
 }

@@ -11,17 +11,23 @@ import javax.swing.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static void main(String[] args) {
         ToyStoreImpl toyStore = ToyStoreImpl.loadStore();
         boolean continueExecution = true;
 
-        DataLoadingThread loadingThread = new DataLoadingThread(toyStore);
-        loadingThread.start();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
 
-        DataSavingThread savingThread = new DataSavingThread(loadingThread, 3, 1000);
-        savingThread.start();
+        DataLoadingThread loadingThread = new DataLoadingThread(toyStore);
+        Future<Void> loadingFuture = executor.submit(loadingThread);
+
+        DataSavingThread savingThread = new DataSavingThread(() -> toyStore.saveData(), 3, 1000);
+        Future<Void> savingFuture = executor.submit(savingThread);
 
         while (continueExecution) {
             try {
@@ -137,8 +143,8 @@ public class Main {
         }
 
         try {
-            loadingThread.join();
-            savingThread.join();
+            executor.shutdown();
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
