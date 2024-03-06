@@ -1,9 +1,13 @@
 package cue.edu.co.model;
 
+import lombok.Getter;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
+
+@Getter
 public class Toy implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -32,19 +36,11 @@ public class Toy implements Serializable {
         this.quantity = quantity;
     }
 
-    public String getName() {
-        return name;
-    }
-
     public void setName(String name) {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Name cannot be null or empty");
         }
         this.name = name;
-    }
-
-    public char getType() {
-        return type;
     }
 
     public void setType(char type) {
@@ -54,19 +50,11 @@ public class Toy implements Serializable {
         this.type = type;
     }
 
-    public double getPrice() {
-        return price;
-    }
-
     public void setPrice(double price) {
         if (price <= 0) {
             throw new IllegalArgumentException("Price must be greater than zero");
         }
         this.price = price;
-    }
-
-    public int getQuantity() {
-        return quantity;
     }
 
     public void setQuantity(int quantity) {
