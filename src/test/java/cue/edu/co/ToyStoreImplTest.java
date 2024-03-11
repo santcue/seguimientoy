@@ -47,7 +47,7 @@ public class ToyStoreImplTest {
     public void loadStore_Successful() {
         service.addToy(new ToyDto("Car", '1', 1500.0, 45));
 
-        ToyStoreImpl loadedStore = ToyStoreImpl.loadStore();
+        ToyStoreImpl loadedStore = ToyStoreImpl.loadStore(conn);
 
         assertEquals(1, loadedStore.getInventory().size());
     }

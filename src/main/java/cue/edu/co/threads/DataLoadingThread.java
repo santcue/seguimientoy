@@ -2,13 +2,14 @@ package cue.edu.co.threads;
 
 import cue.edu.co.service.impl.ToyStoreImpl;
 
+import java.sql.Connection;
 import java.util.concurrent.Callable;
 
 public class DataLoadingThread implements Callable<Void> {
-    private final ToyStoreImpl toyStore;
+    private final Connection conn;
 
-    public DataLoadingThread (ToyStoreImpl toyStore) {
-        this.toyStore = toyStore;
+    public DataLoadingThread(Connection connection) {
+        this.conn = connection;
     }
 
     @Override

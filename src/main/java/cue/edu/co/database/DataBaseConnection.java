@@ -6,13 +6,13 @@ import java.sql.SQLException;
 
 public class DataBaseConnection {
 
+    private static String url = "jdbc:mysql://localhost:3306/toy_store";
+    private static String user = "root";
+    private static String password = "root123";
     private static Connection connection;
     public static Connection getInstance() throws SQLException {
-        if(connection==null) {
-            String password = "root123";
-            String user = "root";
-            String url = "jdbc:mysql://localhost:3306/toy_store";
-            connection = DriverManager.getConnection(url, user, password);
+        if(connection==null){
+            connection = DriverManager.getConnection(url,user,password);
         }
         return connection;
     }

@@ -18,32 +18,25 @@ import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static void main(String[] args) {
-        ToyStoreImpl toyStore = ToyStoreImpl.loadStore();
+        ToyStoreImpl toyStore = new ToyStoreImpl();
         boolean continueExecution = true;
-
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-
-        DataLoadingThread loadingThread = new DataLoadingThread(toyStore);
-        Future<Void> loadingFuture = executor.submit(loadingThread);
-
-        DataSavingThread savingThread = new DataSavingThread(() -> toyStore.saveData(), 3, 1000);
-        Future<Void> savingFuture = executor.submit(savingThread);
 
         while (continueExecution) {
             try {
-                String option = JOptionPane.showInputDialog(
-                        "Select an option:\n" +
-                                "1. Add toy\n" +
-                                "2. Show quantity of toys by type\n" +
-                                "3. Show total quantity of toys\n" +
-                                "4. Show total value of toys\n" +
-                                "5. Decrease stock of a toy\n" +
-                                "6. Increase stock of a toy\n" +
-                                "7. Show type with most toys\n" +
-                                "8. Show type with least toys\n" +
-                                "9. Get toys with value greater than\n" +
-                                "10. Sort stock by type\n" +
-                                "11. Exit"
+                String option = JOptionPane.showInputDialog (
+                        """
+                                Select an option:
+                                1. Add toy
+                                2. Show quantity of toys by type
+                                3. Show total quantity of toys
+                                4. Show total value of toys
+                                5. Decrease stock of a toy
+                                6. Increase stock of a toy
+                                7. Show type with most toys
+                                8. Show type with least toys
+                                9. Get toys with value greater than
+                                10. Sort stock by type
+                                11. Exit"""
                 );
 
                 if (option != null) {
@@ -54,7 +47,6 @@ public class Main {
                             double price = Double.parseDouble(JOptionPane.showInputDialog("Enter the price of the toy:"));
                             int quantity = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity of the toy:"));
 
-                            toyStore.addToy(new ToyDto(name, type, price, quantity));
                             break;
                         case "2":
                             Map<Character, Integer> quantityByType = toyStore.countToysByType();
@@ -142,21 +134,6 @@ public class Main {
             }
         }
 
-        try {
-            executor.shutdown();
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-    }
-    private static Toy findToy(ToyStore toyStore, String name) {
-        for (Toy toy : toyStore.getInventory()) {
-            if (toy.getName().equalsIgnoreCase(name)) {
-                return toy;
-            }
-        }
-        return null;
     }
 
 }
