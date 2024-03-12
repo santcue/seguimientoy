@@ -4,17 +4,15 @@ import cue.edu.co.Exceptions.ToyStoreException;
 import cue.edu.co.database.DataBaseConnection;
 import cue.edu.co.mapping.dtos.*;
 import cue.edu.co.model.Category;
-import cue.edu.co.model.Client;
-import cue.edu.co.model.Employee;
 import cue.edu.co.model.Toy;
-import cue.edu.co.service.ToyStore;
+
 import cue.edu.co.service.impl.ToyStoreImpl;
-import cue.edu.co.threads.DataLoadingThread;
-import cue.edu.co.threads.DataSavingThread;
 
 import javax.swing.*;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -123,19 +121,19 @@ public class Main {
                             addCustomer(scanner);
                             break;
                         case 0:
-                            System.out.println("Gracias por visitar la tienda de juguetes. ¡Hasta luego!");
+                            System.out.println("Thank you for visiting the toy store. See you later!");
                             break;
                         default:
-                            System.out.println("Opción no válida. Inténtelo de nuevo.");
+                            System.out.println("Invalid option. Try again.");
                             break;
                     }
                 } catch (InputMismatchException e) {
-                    System.out.println("Por favor, ingrese un número válido.");
+                    System.out.println("Please enter a valid number.");
                     scanner.nextLine();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 } catch (ToyStoreException.ToyNotFoundException e) {
-                    System.out.println("Error: Juguete no encontrado - " + e.getMessage());
+                    System.out.println("Error: Toy not found - " + e.getMessage());
                 }
             }
         } catch (SQLException e) {
@@ -145,120 +143,203 @@ public class Main {
 
     private static void searchToy() throws SQLException, ToyStoreException.ToyNotFoundException {
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Ingrese el ID del juguete a buscar: ");
+        System.out.print("Enter the ID of the toy to search: ");
         int id = scanner.nextInt();
         ToyDto toy = toyStore.search(id);
         if (toy != null) {
-            System.out.println("Juguete encontrado:");
+            System.out.println("Toy found:");
             System.out.println(toy);
         } else {
-            System.out.println("No se encontró ningún juguete con el ID proporcionado.");
+            System.out.println("No toy found with the provided ID.");
         }
     }
 
     private static void addNewToy(Scanner scanner) throws SQLException {
-        System.out.print("Ingrese el nombre del juguete: ");
+        System.out.print("Enter the name of the toy: ");
         String name = scanner.nextLine();
-        System.out.print("Ingrese el precio del juguete: ");
-        int price = scanner.nextInt();
+
+        System.out.print("Enter the price of the toy: ");
+        double price = scanner.nextDouble();
         scanner.nextLine();
-        System.out.print("Ingrese la cantidad en stock del juguete: ");
-        int stock = scanner.nextInt();
+
+        System.out.print("Enter the quantity in stock of the toy: ");
+        int quantity = scanner.nextInt();
         scanner.nextLine();
-        System.out.print("Ingrese la categoría del juguete: ");
+
+        System.out.print("Enter the category ID of the toy: ");
         int categoryId = scanner.nextInt();
         scanner.nextLine();
-        System.out.println("Ingrese el tipo de la categoría del juguete");
-        String type = scanner.nextLine();
-        Category c = new Category(categoryId,type);
-        ToyDto toyDTO = new ToyDto(name, categoryId, price, stock);
-        toyStore.addToy(toyDTO);
-        System.out.println("Juguete agregado con éxito.");
+
+        System.out.print("Enter the type of the toy category: ");
+        String categoryType = scanner.nextLine();
+
+        Category category = new Category(categoryId, categoryType);
+
+        ToyDto toyDTO = new ToyDto(name, category, price, quantity);
+
+        System.out.println("Toy added successfully.");
     }
 
     private static void addCustomer(Scanner scanner) throws SQLException {
-        System.out.println("Ingrese el nombre del cliente");
+        System.out.println("Enter the name of the customer");
         String name = scanner.nextLine();
-        System.out.println("Ingrese el ID number del usuario");
-        String IDnumber = scanner.nextLine();
-        System.out.println("Ingrese la fecha de nacimiento del cliente");
-        Date fecha = Date.valueOf(scanner.nextLine());
-        ClientDto clienteDTO = new ClientDto(name, IDnumber, fecha);
-        toyStore.addCliente(clienteDTO);
-        System.out.println("Usuario agregado con exito");
+
+        System.out.println("Enter the customer's identification number");
+        String identity = scanner.nextLine();
+
+        System.out.println("Enter the customer's birthdate (in YYYY-MM-DD format)");
+        String birthdateStr = scanner.nextLine();
+
+        Date birthdate = null;
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            birthdate = dateFormat.parse(birthdateStr);
+        } catch (ParseException e) {
+            System.out.println("Error parsing birthdate: " + e.getMessage());
+            return;
+        }
+
+        ClientDto clienteDTO = ClientDto.builder()
+                .name(name)
+                .identity(identity)
+                .birthdate(String.valueOf(birthdate))
+                .build();
+
+        System.out.println("Customer added successfully.");
     }
 
     private static void addEmployee(Scanner scanner) throws SQLException {
-        System.out.println("Ingrese su usuario");
-        String user = scanner.nextLine();
-        System.out.println("Ingrese su contraseña");
+        System.out.println("Enter your username");
+        String name = scanner.nextLine();
+
+        System.out.println("Enter your password");
         String password = scanner.nextLine();
-        System.out.println("Ingrese su fecha de ingreso");
-        Date date = Date.valueOf(scanner.nextLine());
-        EmployeeDto employeesDTO = new EmployeeDto(user,password,date);
-        toyStore.addEmployees(employeesDTO);
+
+        System.out.println("Enter your address");
+        String address = scanner.nextLine();
+
+        System.out.println("Enter your phone number");
+        String phone = scanner.nextLine();
+
+        System.out.println("Enter your email");
+        String email = scanner.nextLine();
+
+        System.out.println("Enter your position");
+        String post = scanner.nextLine();
+
+        System.out.println("Enter your salary");
+        double salary = scanner.nextDouble();
+        scanner.nextLine();
+
+        System.out.println("Enter your employment history");
+        String employmentHistory = scanner.nextLine();
+
+        System.out.println("Enter your birthdate (in YYYY-MM-DD format)");
+        String birthdateStr = scanner.nextLine();
+
+        Date birthdate = null;
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            birthdate = dateFormat.parse(birthdateStr);
+        } catch (ParseException e) {
+            System.out.println("Error parsing birthdate: " + e.getMessage());
+            return;
+        }
+        EmployeeDto employeeDTO = EmployeeDto.builder()
+                .name(name)
+                .address(address)
+                .phone(phone)
+                .email(email)
+                .post(post)
+                .salary(salary)
+                .employment_history(employmentHistory)
+                .password(password)
+                .birthdate(birthdateStr)
+                .build();
+
+        System.out.println("Employee added successfully.");
     }
 
     private static void newSale(Scanner scanner) throws SQLException {
-        System.out.println("Ingrese el id del cliente");
-        int Id = scanner.nextInt();
+        System.out.println("Enter the client ID");
+        int clientId = scanner.nextInt();
         scanner.nextLine();
-        System.out.println("ingrese el id del empleado");
+
+        System.out.println("Enter the employee ID");
         int employeeId = scanner.nextInt();
-        System.out.println("Ingrese el nombre del cliente");
-        String clientId = scanner.nextLine();
-        System.out.println("Ingrese el ID number del cliente");
-        String ID = scanner.nextLine();
-        System.out.println("Ingrese la  fecha de nacimiento");
-        Date date = Date.valueOf(scanner.nextLine());
-        System.out.println("Ingrese el user");
-        String user = scanner.nextLine();
-        System.out.println("Ingrese la contraseña");
-        String password = scanner.nextLine();
-        System.out.println("Ingrese fecha de inicio");
-        Date startDate = Date.valueOf(scanner.nextLine());
-        Client cliente = new Client(Id,clientId,ID,date);
-        Employee employees = new Employee(employeeId,user,password,startDate);
-        SalesDto saleDTO = new SalesDto(cliente,employees);
-        toyStore.addSale(saleDTO);
+        scanner.nextLine();
+
+        System.out.println("Enter the sale date (in YYYY-MM-DD format)");
+        String saleDateStr = scanner.nextLine();
+        Date saleDate = null;
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            saleDate = dateFormat.parse(saleDateStr);
+        } catch (ParseException e) {
+            System.out.println("Error parsing sale date: " + e.getMessage());
+            return;
+        }
+
+        System.out.println("Enter the toy ID");
+        int toyId = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.println("Enter the quantity of toys sold");
+        int quantity = scanner.nextInt();
+        scanner.nextLine();
+
+        ClientDto clientDto = ClientDto.builder()
+                .id(clientId)
+                .build();
+
+        EmployeeDto employeeDto = EmployeeDto.builder()
+                .id(employeeId)
+                .build();
+        SalesDetailsDto salesDetailsDto = SalesDetailsDto.builder()
+                .id_toy(Toy.builder().id(toyId).build())
+                .quantity(quantity)
+                .build();
+
+        SalesDto salesDto = SalesDto.builder()
+                .id(Integer.parseInt(saleDateStr))
+                .date(saleDateStr)
+                .client_id(clientId)
+                .id_employee(employeeId)
+                .build();
+
     }
 
-
-
-
-
-
     private static void updateStock(Scanner scanner) {
-        System.out.print("Ingrese el ID del juguete para actualizar el stock: ");
+        System.out.print("Enter the toy ID to update the stock: ");
         int toyId = scanner.nextInt();
-        System.out.print("Ingrese la cantidad de cambio de stock (positivo para agregar, negativo para restar): ");
+        System.out.print("Enter the stock change amount (positive to add, negative to subtract): ");
         int quantityChange = scanner.nextInt();
         toyStore.updateStock(toyId, quantityChange);
-        System.out.println("Stock actualizado con éxito.");
+        System.out.println("Stock updated successfully.");
     }
 
     private static void getTotalStock() {
         int totalStock = toyStore.getTotalStock();
-        System.out.println("El total de stock en la tienda es: " + totalStock);
+        System.out.println("The total stock in the store is: " + totalStock);
     }
 
     private static void getTotalValue() {
         double totalValue = toyStore.getTotalValue();
-        System.out.println("El valor total del inventario en la tienda es: " + totalValue);
+        System.out.println("The total value of inventory in the store is: " + totalValue);
     }
 
     private static void getTypeWithMostToys() {
         String typeWithMostToys = toyStore.getTypeWithMostToys();
-        System.out.println("El tipo con más juguetes es: " + typeWithMostToys);
+        System.out.println("The type with the most toys is: " + typeWithMostToys);
     }
 
     private static void getTypeWithLeastToys() {
         String typeWithLeastToys = toyStore.getTypeWithLeastToys();
-        System.out.println("El tipo con menos juguetes es: " + typeWithLeastToys);
+        System.out.println("The type with the least toys is: " + typeWithLeastToys);
     }
 
     private static void getToysWithValueGreaterThan(Scanner scanner) {
-        System.out.print("Ingrese el valor mínimo para los juguetes que desea buscar: ");
+        System.out.print("Enter the minimum value for the toys you want to search: ");
         int value = scanner.nextInt();
         List<ToyDto> toys = toyStore.getToysWithValueGreaterThan(value);
         displayToys(toys);
@@ -289,9 +370,9 @@ public class Main {
 
     private static void displayToys(List<ToyDto> toys) {
         if (toys.isEmpty()) {
-            System.out.println("No hay juguetes disponibles en la tienda.");
+            System.out.println("No toys available in the store.");
         } else {
-            System.out.println("Lista de juguetes:");
+            System.out.println("List of toys:");
             for (ToyDto toy : toys) {
                 System.out.println(toy);
             }
@@ -299,9 +380,9 @@ public class Main {
     }
     private static void displayEmployees(List<EmployeeDto> employees) {
         if (employees.isEmpty()) {
-            System.out.println("No hay empleados disponibles.");
+            System.out.println("No employees available.");
         } else {
-            System.out.println("Lista de empleados:");
+            System.out.println("List of employees:");
             for (EmployeeDto employ : employees) {
                 System.out.println(employ);
             }
@@ -309,9 +390,9 @@ public class Main {
     }
     private static void displaySaleDetails(List<SalesDetailsDto> saleDetails) {
         if (saleDetails.isEmpty()) {
-            System.out.println("No hay ventas y detalles registradas.");
+            System.out.println("No sales and details recorded.");
         } else {
-            System.out.println("Lista de ventas y sus detalles:");
+            System.out.println("List of sales and their details:");
             for (SalesDetailsDto saleDetailsDTO : saleDetails) {
                 System.out.println(saleDetailsDTO);
             }
@@ -319,9 +400,9 @@ public class Main {
     }
     private static  void displaySales(List<SalesDto> sales){
         if (sales.isEmpty()){
-            System.out.println("No hay ventas registradas.");
+            System.out.println("No sales recorded.");
         } else {
-            System.out.println("Lista de ventas");
+            System.out.println("List of sales");
             for (SalesDto sale : sales) {
                 System.out.println(sale);
             }
@@ -329,9 +410,9 @@ public class Main {
     }
     private static void displayClients(List<ClientDto> clients){
         if (clients.isEmpty()){
-            System.out.println("No hay clientes registrados.");
+            System.out.println("No clients registered.");
         } else {
-            System.out.println("Lista de clientes");
+            System.out.println("List of clients");
             for (ClientDto client : clients) {
                 System.out.println(client);
             }

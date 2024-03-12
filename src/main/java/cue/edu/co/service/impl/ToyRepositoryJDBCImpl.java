@@ -21,11 +21,11 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
         t.setPrice(resultSet.getInt("price"));
 
         t.setType(new Category(
-                resultSet.getInt("id_category"),
-                resultSet.getString("category_name")
+                resultSet.getInt("id"),
+                resultSet.getString("type")
 
         ));
-        t.setQuantity(resultSet.getInt("stock"));
+        t.setQuantity(resultSet.getInt("quantity"));
         return t;
     }
 
