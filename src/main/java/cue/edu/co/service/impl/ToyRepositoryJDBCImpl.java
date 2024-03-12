@@ -80,7 +80,7 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
     public int getTotalStock() {
         int totalStock = 0;
         try (Statement statement = getConnection().createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT SUM(stock) AS total_stock FROM toy")) {
+             ResultSet resultSet = statement.executeQuery("SELECT SUM(quantity) AS total_stock FROM toys")) {
             if (resultSet.next()) {
                 totalStock = resultSet.getInt("total_stock");
             }
@@ -94,7 +94,7 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
     public int getTotalValue() {
         int totalValue = 0;
         try (Statement statement = getConnection().createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT SUM(stock * price) AS total_value FROM toy")) {
+             ResultSet resultSet = statement.executeQuery("SELECT SUM(quantity * price) AS total_value FROM toys")) {
             if (resultSet.next()) {
                 totalValue = resultSet.getInt("total_value");
             }
@@ -110,8 +110,8 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
         try (Statement statement = getConnection().createStatement();
              ResultSet resultSet = statement.executeQuery(
                      "SELECT c.type, COUNT(*) AS total_toys " +
-                             "FROM toy AS t " +
-                             "JOIN category AS c ON t.id_category = c.id " +
+                             "FROM toys AS t " +
+                             "JOIN category AS c ON t.type = c.id " +
                              "GROUP BY c.type " +
                              "ORDER BY total_toys DESC " +
                              "LIMIT 1")) {
@@ -130,8 +130,8 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
         try (Statement statement = getConnection().createStatement();
              ResultSet resultSet = statement.executeQuery(
                      "SELECT c.type, COUNT(*) AS total_toys " +
-                             "FROM toy AS t " +
-                             "JOIN category AS c ON t.id_category = c.id " +
+                             "FROM toys AS t " +
+                             "JOIN category AS c ON t.type = c.id " +
                              "GROUP BY c.type " +
                              "ORDER BY total_toys ASC " +
                              "LIMIT 1")) {
@@ -149,10 +149,11 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
 
         List<Toy> toysWithValueGreaterThan = new ArrayList<>();
         try (PreparedStatement preparedStatement = getConnection().prepareStatement(
-                "SELECT t.*, c.type AS category_type, c.id AS category_id\n" +
-                        "FROM toy AS t\n" +
-                        "JOIN category AS c ON t.id_category = c.id\n" +
-                        "WHERE t.price > ?")) {
+                """
+                        SELECT t.*, c.type AS category_type, c.id AS category_id
+                        FROM toys AS t
+                        JOIN category AS c ON t.type = c.id
+                        WHERE t.price > ?""")) {
             preparedStatement.setInt(1, value);
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
@@ -171,8 +172,8 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
         try (Statement statement = getConnection().createStatement();
              ResultSet resultSet = statement.executeQuery(
                      "SELECT t.*, c.type AS category_name, COUNT(*) AS total_stock " +
-                             "FROM toy AS t " +
-                             "JOIN category AS c ON t.id_category = c.id " +
+                             "FROM toys AS t " +
+                             "JOIN category AS c ON t.type = c.id " +
                              "GROUP BY c.type " +
                              "ORDER BY total_stock ASC")) {
             while (resultSet.next()) {
@@ -187,7 +188,7 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
     @Override
     public void updateStock(int toyId, int quantityChange) {
         try (PreparedStatement preparedStatement = getConnection()
-                .prepareStatement("UPDATE toy SET stock = stock + ? WHERE id = ?")) {
+                .prepareStatement("UPDATE toys SET quantity = quantity + ? WHERE id = ?")) {
             preparedStatement.setInt(1, quantityChange);
             preparedStatement.setInt(2, toyId);
             preparedStatement.executeUpdate();
@@ -202,15 +203,13 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
     public void save(Toy toy) {
         try (PreparedStatement pst = getConnection()
                 .prepareStatement("""
-                                          INSERT INTO toy(name,price,id_category,stock) values (?,?,?,?)
+                                          INSERT INTO toys (name, price ,type , quantity) values (?,?,?,?)
                                           """)
-
-
         ){
             pst.setString(1, toy.getName());
-            pst.setDouble(2,toy.getPrice());
-            pst.setInt(3,toy.getCategory().getId());
-            pst.setInt(4,toy.getStock());
+            pst.setDouble(2, toy.getPrice());
+            pst.setInt(3, toy.getType().getId());
+            pst.setInt(4,toy.getQuantity());
             pst.executeUpdate();
 
         } catch (SQLException e) {
@@ -223,7 +222,7 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
     public void delete(int id) {
         try(PreparedStatement preparedStatement = getConnection()
                 .prepareStatement("""
-                                      DELETE FROM toy where id=?
+                                      DELETE FROM toys where id = ?
                                       """)
         ){
             preparedStatement.setInt(1,id);
@@ -240,10 +239,9 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
         try(Statement statement=getConnection().createStatement();
             ResultSet resultSet=statement.executeQuery(
                     """
-                        
-                            SELECT id_category, COUNT(*) FROM toy
-                        JOIN category on toy.id_category = category.id
-                        GROUP BY category.type
+                        SELECT toys.type, COUNT(*) FROM toys\s
+                        JOIN category ON toys.type = category.id\s
+                        GROUP BY category.type, toys.type LIMIT 0, 1000;
                         """
             ))
         {
@@ -262,11 +260,11 @@ public class ToyRepositoryJDBCImpl implements ToyRepository<Toy> {
     @Override
     public void update(Toy toy) {
         try (PreparedStatement preparedStatement = getConnection()
-                .prepareStatement("UPDATE toy SET name = ?, price = ?, id_category = ?, stock = ? WHERE id = ?")) {
+                .prepareStatement("UPDATE toys SET name = ?, price = ?, type = ?, quantity = ? WHERE id = ?")) {
             preparedStatement.setString(1, toy.getName());
             preparedStatement.setDouble(2, toy.getPrice());
-            preparedStatement.setInt(3, toy.getCategory().getId());
-            preparedStatement.setInt(4, toy.getStock());
+            preparedStatement.setInt(3, toy.getType().getId());
+            preparedStatement.setInt(4, toy.getQuantity());
             preparedStatement.setInt(5, toy.getId());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {

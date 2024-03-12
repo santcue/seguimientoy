@@ -4,5 +4,5 @@ import cue.edu.co.model.Category;
 import lombok.Builder;
 
 @Builder
-public record ToyDto(int id, String name, Category type, double price, int quantity) {
+public record ToyDto(String name, Category type, double price, int quantity) {
 }

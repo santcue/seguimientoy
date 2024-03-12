@@ -16,6 +16,7 @@ public class SalesJDBCImpl implements Repository<Sales> {
     private Sales createSale(ResultSet resultSet) throws SQLException {
         Sales s = new Sales();
         s.setId(resultSet.getInt("id"));
+        s.setDate(resultSet.getString("date"));
         s.setClient_id(resultSet.getInt("id_cliente"));
         s.setId_employee(resultSet.getInt("id_employees"));
         return s;

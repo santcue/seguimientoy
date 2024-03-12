@@ -1,6 +1,11 @@
 package cue.edu.co.view;
 
-import cue.edu.co.mapping.dtos.ToyDto;
+import cue.edu.co.Exceptions.ToyStoreException;
+import cue.edu.co.database.DataBaseConnection;
+import cue.edu.co.mapping.dtos.*;
+import cue.edu.co.model.Category;
+import cue.edu.co.model.Client;
+import cue.edu.co.model.Employee;
 import cue.edu.co.model.Toy;
 import cue.edu.co.service.ToyStore;
 import cue.edu.co.service.impl.ToyStoreImpl;
@@ -8,132 +13,329 @@ import cue.edu.co.threads.DataLoadingThread;
 import cue.edu.co.threads.DataSavingThread;
 
 import javax.swing.*;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class Main {
+    private static ToyStoreImpl toyStore;
+
     public static void main(String[] args) {
-        ToyStoreImpl toyStore = new ToyStoreImpl();
-        boolean continueExecution = true;
+        try (Connection conn = DataBaseConnection.getInstance()){
+            toyStore = new ToyStoreImpl();
+            Scanner scanner = new Scanner(System.in);
+            int choice = -7;
 
-        while (continueExecution) {
-            try {
-                String option = JOptionPane.showInputDialog (
-                        """
-                                Select an option:
-                                1. Add toy
-                                2. Show quantity of toys by type
-                                3. Show total quantity of toys
-                                4. Show total value of toys
-                                5. Decrease stock of a toy
-                                6. Increase stock of a toy
-                                7. Show type with most toys
-                                8. Show type with least toys
-                                9. Get toys with value greater than
-                                10. Sort stock by type
-                                11. Exit"""
-                );
+            while (choice != 0) {
+                System.out.println("Welcome to the toy store");
+                System.out.println("1. Show toy list");
+                System.out.println("2. Search toy by ID");
+                System.out.println("3. Add new toy");
+                System.out.println("4. Update stock of a toy");
+                System.out.println("5. Get stock total");
+                System.out.println("6. Get total inventory value");
+                System.out.println("7. Get guy with more toys");
+                System.out.println("8. Get type with fewer toys");
+                System.out.println("9. Get toys with a value greater than a certain amount");
+                System.out.println("10. Sort toys by stock quantity");
+                System.out.println("11. Show sales list and its details");
+                System.out.println("12. Show employees");
+                System.out.println("13. Show Active Customers");
+                System.out.println("14. Show Recorded Sales");
+                System.out.println("15. New sale");
+                System.out.println("16. New Employee");
+                System.out.println("17. New client");
+                System.out.println("0. Exit");
+                System.out.print("Enter your choice: ");
 
-                if (option != null) {
-                    switch (option) {
-                        case "1":
-                            String name = JOptionPane.showInputDialog("Enter the name of the toy:");
-                            char type = JOptionPane.showInputDialog("Enter the type of the toy (O, 1, 2):").charAt(0);
-                            double price = Double.parseDouble(JOptionPane.showInputDialog("Enter the price of the toy:"));
-                            int quantity = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity of the toy:"));
-
-                            break;
-                        case "2":
-                            Map<Character, Integer> quantityByType = toyStore.countToysByType();
-                            StringBuilder message = new StringBuilder("Quantity of toys by type:\n");
-                            for (Map.Entry<Character, Integer> entry : quantityByType.entrySet()) {
-                                message.append("Type ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
-                            }
-                            JOptionPane.showMessageDialog(null, message.toString());
-                            break;
-                        case "3":
-                            int totalQuantity = toyStore.getTotalQuantity();
-                            JOptionPane.showMessageDialog(null, "Total quantity of toys: " + totalQuantity);
-                            break;
-                        case "4":
-                            double totalValue = toyStore.getTotalValue();
-                            JOptionPane.showMessageDialog(null, "Total value of toys: $" + totalValue);
-                            break;
-                        case "5":
-                            String toyName = JOptionPane.showInputDialog("Enter the name of the toy to decrease stock:");
-                            Toy toy = findToy(toyStore, toyName);
-                            if (toy != null) {
-                                int quantityDecrease = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity to decrease:"));
-                                toyStore.decreaseStock(toy, quantityDecrease);
-                                JOptionPane.showMessageDialog(null, "Stock decreased successfully.");
-                            } else {
-                                JOptionPane.showMessageDialog(null, "The toy is not found in the store.");
-                            }
-                            break;
-                        case "6":
-                            String toyNameIncrease = JOptionPane.showInputDialog("Enter the name of the toy to increase stock:");
-                            Toy toyIncrease = findToy(toyStore, toyNameIncrease);
-                            if (toyIncrease != null) {
-                                int quantityIncrease = Integer.parseInt(JOptionPane.showInputDialog("Enter the quantity to increase:"));
-                                toyStore.increaseStock(toyIncrease, quantityIncrease);
-                                JOptionPane.showMessageDialog(null, "Stock increased successfully.");
-                            } else {
-                                JOptionPane.showMessageDialog(null, "The toy is not found in the store.");
-                            }
-                            break;
-                        case "7":
-                            char typeWithMostToys = toyStore.getTypeWithMostToys();
-                            JOptionPane.showMessageDialog(null, "Type with most toys: " + typeWithMostToys);
-                            break;
-                        case "8":
-                            char typeWithLeastToys = toyStore.getTypeWithLeastToys();
-                            JOptionPane.showMessageDialog(null, "Type with least toys: " + typeWithLeastToys);
-                            break;
-                        case "9":
-                            double value = Double.parseDouble(JOptionPane.showInputDialog("Enter the minimum value:"));
-                            List<Toy> toysWithValueGreaterThan = toyStore.getToysWithValueGreaterThan(value);
-                            StringBuilder messageMinimum = new StringBuilder("Toys with value greater than $" + value + ":\n");
-                            for (Toy toyMinimum : toysWithValueGreaterThan) {
-                                messageMinimum.append(toyMinimum.toString()).append("\n");
-                            }
-                            JOptionPane.showMessageDialog(null, messageMinimum.toString());
-                            break;
-                        case "10":
-                            List<Toy> sortedInventory = toyStore.getInventory();
-                            Collections.sort(sortedInventory, (t1, t2) -> {
-                                if (t1.getType() != t2.getType()) {
-                                    return t1.getType() - t2.getType();
+                try {
+                    choice = scanner.nextInt();
+                    scanner.nextLine();
+                    switch (choice) {
+                        case 1:
+                            CompletableFuture<List<ToyDto>> future = CompletableFuture.supplyAsync(() -> {
+                                List<ToyDto> list = toyStore.listToys();
+                                if (!list.isEmpty()) {
+                                    for (ToyDto toys : list) {
+                                        System.out.println(toys);
+                                        System.out.println("Loading...");
+                                        try {
+                                            Thread.sleep(3000);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                } else {
+                                    System.out.println("There are no toys on the list");
                                 }
-                                return t1.getQuantity() - t2.getQuantity();
+                                return list;
                             });
-
-                            StringBuilder messageSorted = new StringBuilder("Inventory sorted by type and quantity:\n");
-                            for (Toy toySorted : sortedInventory) {
-                                messageSorted.append(toySorted.toString()).append("\n");
-                            }
-                            JOptionPane.showMessageDialog(null, messageSorted.toString());
+                            future.join();
+                            System.out.println("The task is completed");
                             break;
-                        case "11":
-                            continueExecution = false;
+                        case 2:
+                            searchToy();
+                            break;
+                        case 3:
+                            addNewToy(scanner);
+                            break;
+                        case 4:
+                            updateStock(scanner);
+                            break;
+                        case 5:
+                            getTotalStock();
+                            break;
+                        case 6:
+                            getTotalValue();
+                            break;
+                        case 7:
+                            getTypeWithMostToys();
+                            break;
+                        case 8:
+                            getTypeWithLeastToys();
+                            break;
+                        case 9:
+                            getToysWithValueGreaterThan(scanner);
+                            break;
+                        case 10:
+                            orderByStockQuantity();
+                            break;
+                        case 11:
+                            listSaleDetails();
+                            break;
+                        case 12:
+                            listEmployees();
+                            break;
+                        case 13:
+                            listCustomers();
+                            break;
+                        case 14:
+                            listSales();
+                            break;
+                        case 15:
+                            newSale(scanner);
+                            break;
+                        case 16:
+                            addEmployee(scanner);
+                            break;
+                        case 17:
+                            addCustomer(scanner);
+                            break;
+                        case 0:
+                            System.out.println("Gracias por visitar la tienda de juguetes. ¡Hasta luego!");
                             break;
                         default:
-                            JOptionPane.showMessageDialog(null, "Invalid option");
+                            System.out.println("Opción no válida. Inténtelo de nuevo.");
+                            break;
                     }
-                } else {
-                    continueExecution = false;
+                } catch (InputMismatchException e) {
+                    System.out.println("Por favor, ingrese un número válido.");
+                    scanner.nextLine();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } catch (ToyStoreException.ToyNotFoundException e) {
+                    System.out.println("Error: Juguete no encontrado - " + e.getMessage());
                 }
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(null, "Invalid input");
-            } catch (IllegalArgumentException e) {
-                JOptionPane.showMessageDialog(null, e.getMessage());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void searchToy() throws SQLException, ToyStoreException.ToyNotFoundException {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Ingrese el ID del juguete a buscar: ");
+        int id = scanner.nextInt();
+        ToyDto toy = toyStore.search(id);
+        if (toy != null) {
+            System.out.println("Juguete encontrado:");
+            System.out.println(toy);
+        } else {
+            System.out.println("No se encontró ningún juguete con el ID proporcionado.");
+        }
+    }
+
+    private static void addNewToy(Scanner scanner) throws SQLException {
+        System.out.print("Ingrese el nombre del juguete: ");
+        String name = scanner.nextLine();
+        System.out.print("Ingrese el precio del juguete: ");
+        int price = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Ingrese la cantidad en stock del juguete: ");
+        int stock = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Ingrese la categoría del juguete: ");
+        int categoryId = scanner.nextInt();
+        scanner.nextLine();
+        System.out.println("Ingrese el tipo de la categoría del juguete");
+        String type = scanner.nextLine();
+        Category c = new Category(categoryId,type);
+        ToyDto toyDTO = new ToyDto(name, categoryId, price, stock);
+        toyStore.addToy(toyDTO);
+        System.out.println("Juguete agregado con éxito.");
+    }
+
+    private static void addCustomer(Scanner scanner) throws SQLException {
+        System.out.println("Ingrese el nombre del cliente");
+        String name = scanner.nextLine();
+        System.out.println("Ingrese el ID number del usuario");
+        String IDnumber = scanner.nextLine();
+        System.out.println("Ingrese la fecha de nacimiento del cliente");
+        Date fecha = Date.valueOf(scanner.nextLine());
+        ClientDto clienteDTO = new ClientDto(name, IDnumber, fecha);
+        toyStore.addCliente(clienteDTO);
+        System.out.println("Usuario agregado con exito");
+    }
+
+    private static void addEmployee(Scanner scanner) throws SQLException {
+        System.out.println("Ingrese su usuario");
+        String user = scanner.nextLine();
+        System.out.println("Ingrese su contraseña");
+        String password = scanner.nextLine();
+        System.out.println("Ingrese su fecha de ingreso");
+        Date date = Date.valueOf(scanner.nextLine());
+        EmployeeDto employeesDTO = new EmployeeDto(user,password,date);
+        toyStore.addEmployees(employeesDTO);
+    }
+
+    private static void newSale(Scanner scanner) throws SQLException {
+        System.out.println("Ingrese el id del cliente");
+        int Id = scanner.nextInt();
+        scanner.nextLine();
+        System.out.println("ingrese el id del empleado");
+        int employeeId = scanner.nextInt();
+        System.out.println("Ingrese el nombre del cliente");
+        String clientId = scanner.nextLine();
+        System.out.println("Ingrese el ID number del cliente");
+        String ID = scanner.nextLine();
+        System.out.println("Ingrese la  fecha de nacimiento");
+        Date date = Date.valueOf(scanner.nextLine());
+        System.out.println("Ingrese el user");
+        String user = scanner.nextLine();
+        System.out.println("Ingrese la contraseña");
+        String password = scanner.nextLine();
+        System.out.println("Ingrese fecha de inicio");
+        Date startDate = Date.valueOf(scanner.nextLine());
+        Client cliente = new Client(Id,clientId,ID,date);
+        Employee employees = new Employee(employeeId,user,password,startDate);
+        SalesDto saleDTO = new SalesDto(cliente,employees);
+        toyStore.addSale(saleDTO);
+    }
+
+
+
+
+
+
+    private static void updateStock(Scanner scanner) {
+        System.out.print("Ingrese el ID del juguete para actualizar el stock: ");
+        int toyId = scanner.nextInt();
+        System.out.print("Ingrese la cantidad de cambio de stock (positivo para agregar, negativo para restar): ");
+        int quantityChange = scanner.nextInt();
+        toyStore.updateStock(toyId, quantityChange);
+        System.out.println("Stock actualizado con éxito.");
+    }
+
+    private static void getTotalStock() {
+        int totalStock = toyStore.getTotalStock();
+        System.out.println("El total de stock en la tienda es: " + totalStock);
+    }
+
+    private static void getTotalValue() {
+        double totalValue = toyStore.getTotalValue();
+        System.out.println("El valor total del inventario en la tienda es: " + totalValue);
+    }
+
+    private static void getTypeWithMostToys() {
+        String typeWithMostToys = toyStore.getTypeWithMostToys();
+        System.out.println("El tipo con más juguetes es: " + typeWithMostToys);
+    }
+
+    private static void getTypeWithLeastToys() {
+        String typeWithLeastToys = toyStore.getTypeWithLeastToys();
+        System.out.println("El tipo con menos juguetes es: " + typeWithLeastToys);
+    }
+
+    private static void getToysWithValueGreaterThan(Scanner scanner) {
+        System.out.print("Ingrese el valor mínimo para los juguetes que desea buscar: ");
+        int value = scanner.nextInt();
+        List<ToyDto> toys = toyStore.getToysWithValueGreaterThan(value);
+        displayToys(toys);
+    }
+
+    private static void orderByStockQuantity() {
+        List<ToyDto> toys = toyStore.orderByStockQuantity();
+        displayToys(toys);
+    }
+    private static void listEmployees() {
+        List<EmployeeDto> employees = toyStore.listEmployees();
+        displayEmployees(employees);
+    }
+    private static void listSaleDetails() {
+        List<SalesDetailsDto> saleDetails = toyStore.listSaleDetails();
+        displaySaleDetails(saleDetails);
+    }
+    private static void listSales() {
+        List<SalesDto> sales = toyStore.listSales();
+        displaySales(sales);
+    }
+    private static void listCustomers(){
+        List<ClientDto> clients = toyStore.listCustomers();
+        displayClients(clients);
+    }
+
+
+
+    private static void displayToys(List<ToyDto> toys) {
+        if (toys.isEmpty()) {
+            System.out.println("No hay juguetes disponibles en la tienda.");
+        } else {
+            System.out.println("Lista de juguetes:");
+            for (ToyDto toy : toys) {
+                System.out.println(toy);
+            }
+        }
+    }
+    private static void displayEmployees(List<EmployeeDto> employees) {
+        if (employees.isEmpty()) {
+            System.out.println("No hay empleados disponibles.");
+        } else {
+            System.out.println("Lista de empleados:");
+            for (EmployeeDto employ : employees) {
+                System.out.println(employ);
+            }
+        }
+    }
+    private static void displaySaleDetails(List<SalesDetailsDto> saleDetails) {
+        if (saleDetails.isEmpty()) {
+            System.out.println("No hay ventas y detalles registradas.");
+        } else {
+            System.out.println("Lista de ventas y sus detalles:");
+            for (SalesDetailsDto saleDetailsDTO : saleDetails) {
+                System.out.println(saleDetailsDTO);
+            }
+        }
+    }
+    private static  void displaySales(List<SalesDto> sales){
+        if (sales.isEmpty()){
+            System.out.println("No hay ventas registradas.");
+        } else {
+            System.out.println("Lista de ventas");
+            for (SalesDto sale : sales) {
+                System.out.println(sale);
+            }
+        }
+    }
+    private static void displayClients(List<ClientDto> clients){
+        if (clients.isEmpty()){
+            System.out.println("No hay clientes registrados.");
+        } else {
+            System.out.println("Lista de clientes");
+            for (ClientDto client : clients) {
+                System.out.println(client);
             }
         }
 
     }
-
 }

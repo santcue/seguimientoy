@@ -10,8 +10,8 @@ import lombok.*;
 @Builder
 public class SalesDetails {
 
-    private int id_sale;
-    private int id_toy;
+    private Sales id_sale;
+    private Toy id_toy;
     private int quantity;
     private double price;
 

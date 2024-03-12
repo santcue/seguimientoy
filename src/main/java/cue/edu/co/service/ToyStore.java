@@ -11,7 +11,8 @@ import java.util.Map;
 public interface ToyStore {
 
 
-    void addEmployees(EmployeeDto employeeDTO);
+    void addToy(ToyDto toyDTO);
+    void addEmployees(EmployeeDto employeesDTO);
     void addCliente(ClientDto clientsDTO);
     void addSale(SalesDto saleDTO);
     void addSaleDetails(SalesDetailsDto saleDetailsDTO);
@@ -20,12 +21,24 @@ public interface ToyStore {
     List<EmployeeDto> listEmployees();
     List<SalesDetailsDto> listSaleDetails();
 
-    void addToy(ToyDto toy);
-    List<ToyDto> countToysByType(Category category) throws Exception;
+    List<ToyDto> listToys();
+    List<ToyDto> showByType();
     ToyDto search(Integer id) throws SQLException;
-    int getTotalQuantity();
+
+    int getTotalStock();
+
     double getTotalValue();
-    void decreaseStock(Toy toy, int quantity);
-    void increaseStock(Toy toy, int quantity);
+
+    String getTypeWithMostToys();
+
+    String getTypeWithLeastToys();
+
+
+
+    List<ToyDto> getToysWithValueGreaterThan(int value);
+
+    List<ToyDto> orderByStockQuantity();
+
     void updateStock(int toyId, int quantityChange);
+
 }
